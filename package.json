@@ -2,9 +2,9 @@
 	"name": "axype-cli",
 	"version": "1.0.0",
 	"description": "a CLI for the Axype pasteloader",
-	"main": "dist/index.js",
+	"main": "bin/index.js",
 	"bin": {
-		"axype": "dist/index.js"
+		"axype": "bin/index.js"
 	},
 	"type": "commonjs",
 	"license": "MIT",
