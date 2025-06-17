@@ -1,7 +1,7 @@
 {
 	"name": "axype-cli",
 	"version": "1.0.0",
-	"description": "a CLI for Axype pasteloader",
+	"description": "a CLI for the Axype pasteloader",
 	"main": "dist/index.js",
 	"bin": {
 		"axype": "dist/index.js"
