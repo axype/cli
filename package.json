@@ -1,5 +1,5 @@
 {
-	"name": "axype-cli",
+	"name": "axype",
 	"version": "1.0.0",
 	"description": "a CLI for the Axype pasteloader",
 	"main": "bin/index.js",
