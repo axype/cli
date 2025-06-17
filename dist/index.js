@@ -202,8 +202,48 @@ const init = async function () {
 };
 
 yargs(hideBin(process.argv))
-	.command("init", "initializes a template Axype git project", () => {}, init)
+	.scriptName("axype")
+	.usage("$0 <cmd> [args]")
 
+	.command("init", "Initializes a template Axype project.", () => {}, init)
+
+	.command(
+		"set-token <token>",
+		"Updates your local Axype API token. It is used by the `publish` command.",
+		(yargs) => {
+			return yargs.positional("token", {
+				describe: "The secret token",
+				type: "string",
+			});
+		},
+		() => {}
+	)
+
+	.command(
+		"remove-token",
+		"Removes your local Axype API token.",
+		() => {},
+		() => {}
+	)
+
+	.command(
+		"publish <name> [path]",
+		"Publishes the current paste source to the Axype API.",
+		(yargs) => {
+			return yargs
+				.positional("name", {
+					describe: "The paste name",
+					type: "string",
+				})
+				.positional("path", {
+					describe: "Path of paste's source",
+					default: "output/server.luau",
+				});
+		},
+		() => {}
+	)
+
+	.alias("st", "set-token")
 	.alias("h", "help")
 	.alias("i", "init")
 
