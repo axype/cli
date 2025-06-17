@@ -91,6 +91,17 @@ const init = async function () {
 	const projectName = data.name.replace(/[^a-zA-Z0-9-]/g, "").trim();
 	const useClient = data.useClient;
 
+	if (useClient && !hasCLI("zstd")) {
+		console.log(
+			`${colors.magenta(
+				symbols.cross
+			)} zstd is required to proceed!\n${colors.cyan(
+				symbols.pointerSmall
+			)} Download it here: https://github.com/facebook/zstd/releases/latest`
+		);
+		process.exit(1);
+	}
+
 	let data2;
 	if (useClient) {
 		data2 = await prompt([
