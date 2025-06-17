@@ -1,6 +1,7 @@
-Axype CLI
+# Axype CLI
 
 has the following features:
+
 - creating repos from templates
 - publishing paste sources
 
