@@ -7,8 +7,17 @@
 		"axype": "bin/index.js"
 	},
 	"type": "commonjs",
-	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/axype/cli.git"
+	},
+	"bugs": {
+		"url": "https://github.com/axype/cli/issues"
+	},
+	"homepage": "https://github.com/axype/cli",
+	"license": "ISC",
 	"author": "darkceius",
+	"keywords": [],
 	"dependencies": {
 		"ansi-colors": "^4.1.3",
 		"enquirer": "^2.4.1",
