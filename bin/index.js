@@ -88,7 +88,7 @@ const init = async function () {
 		},
 	]);
 
-	const projectName = data.name.replace(/[^a-zA-Z0-9]/g, "").trim();
+	const projectName = data.name.replace(/[^a-zA-Z0-9-]/g, "").trim();
 	const useClient = data.useClient;
 
 	let data2;
