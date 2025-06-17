@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // axype cli
-// @darkceius
+// @Darkceius
 const yargs = require("yargs");
 const { prompt } = require("enquirer");
 const { hideBin } = require("yargs/helpers");
@@ -11,10 +11,42 @@ const process = require("node:process");
 const childProcess = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require("node:os");
+
+const homeDirectory = os.homedir();
 
 const hasCLI = function (name) {
 	const response = childProcess.spawnSync(name, ["-v"]);
 	return response.error == undefined;
+};
+
+const getFolder = function () {
+	const folder = path.join(homeDirectory, ".axype");
+	if (!fs.existsSync(folder)) {
+		fs.mkdirSync(folder);
+
+		const files = ["secret"];
+		files.forEach((v) => {
+			const pth = path.join(folder, v);
+			if (!fs.existsSync()) {
+				fs.writeFileSync(pth, "");
+			}
+		});
+	}
+
+	return folder;
+};
+
+const getToken = function () {
+	const folder = getFolder();
+	const secret = path.join(folder, "secret");
+	return fs.readFileSync(secret, "utf-8");
+};
+
+const setToken = function (data) {
+	const folder = getFolder();
+	const secret = path.join(folder, "secret");
+	fs.writeFileSync(secret, data || "");
 };
 
 const init = async function () {
@@ -201,6 +233,50 @@ const init = async function () {
 	}
 };
 
+const publish = async function (name, sourcePath) {
+	const file = path.join(process.cwd(), sourcePath);
+	if (!fs.existsSync(file)) {
+		console.log(
+			`${colors.magenta(symbols.cross)} File at target path does not exist!`
+		);
+		process.exit(1);
+	}
+
+	let source;
+	try {
+		source = fs.readFileSync(file, "utf-8");
+	} catch (err) {
+		console.log(`${colors.magenta(symbols.cross)} Failed to read file!`);
+		process.exit(1);
+	}
+
+	console.log(`${colors.cyan(symbols.info)} Publishing source...`);
+
+	const data = await fetch(`https://axype.darkceius.dev/api/setSource`, {
+		method: "POST",
+		headers: {
+			script: name,
+			["Content-Type"]: "application/json",
+			authentication: getToken(),
+		},
+		body: JSON.stringify({
+			source: source,
+		}),
+	});
+
+	const json = data.ok && (await data.json());
+
+	if (data.ok && json.success) {
+		console.log(
+			`${colors.green(symbols.check)} Successfully updated source of ${name}!`
+		);
+	} else {
+		console.log(`${colors.magenta(symbols.cross)} Failed to update source!`);
+		console.log(colors.red(symbols.warning), await data.text());
+		process.exit(1);
+	}
+};
+
 yargs(hideBin(process.argv))
 	.scriptName("axype")
 	.usage("$0 <cmd> [args]")
@@ -208,22 +284,33 @@ yargs(hideBin(process.argv))
 	.command("init", "Initializes a template Axype project.", () => {}, init)
 
 	.command(
-		"set-token <token>",
+		"set-token",
 		"Updates your local Axype API token. It is used by the `publish` command.",
-		(yargs) => {
-			return yargs.positional("token", {
-				describe: "The secret token",
-				type: "string",
-			});
-		},
-		() => {}
+		() => {},
+		async () => {
+			const data = await prompt([
+				{
+					type: "password",
+					name: "token",
+					message: "API Token",
+				},
+			]);
+
+			if (!data.token) return;
+
+			setToken(data.token);
+			console.log(`${colors.green(symbols.check)} Successfully updated token!`);
+		}
 	)
 
 	.command(
 		"remove-token",
 		"Removes your local Axype API token.",
 		() => {},
-		() => {}
+		() => {
+			setToken(undefined);
+			console.log(`${colors.green(symbols.check)} Removed token!`);
+		}
 	)
 
 	.command(
@@ -238,9 +325,10 @@ yargs(hideBin(process.argv))
 				.positional("path", {
 					describe: "Path of paste's source",
 					default: "output/server.luau",
+					type: "string",
 				});
 		},
-		() => {}
+		(args) => publish(args.name, args.path)
 	)
 
 	.alias("st", "set-token")
