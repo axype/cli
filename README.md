@@ -9,7 +9,7 @@ a CLI for the Axype pasteloader
 
 ## Requirements
 
-- [x] Go lang (building)
+- Go lang (building)
 
 ## Building
 
