@@ -451,7 +451,7 @@ func generateCommand(ctx context.Context, cmd *cli.Command) error {
 func main() {
 	cmd := &cli.Command{
 		Name:    "axype",
-		Version: "v1.0.0",
+		Version: "v1.1.0",
 		Usage:   "CLI for the Axype pasteloader",
 
 		Commands: []*cli.Command{
