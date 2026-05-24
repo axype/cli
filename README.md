@@ -6,6 +6,7 @@ a CLI for the Axype pasteloader
 
 - [x] Publishing pastes
 - [x] Creating projects
+- [x] Generating pastes (loaders)
 
 ## Requirements
 

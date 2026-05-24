@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -357,15 +358,93 @@ func publishCommand(ctx context.Context, cmd *cli.Command) error {
 
 	defer response.Body.Close()
 
-	if response.StatusCode >= 200 && response.StatusCode < 300 {
-		showSuccess("Successfully updated the source of " + name)
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		showError("Failed to publish source!")
+		body, _ := io.ReadAll(response.Body)
+		showError("Error >", string(body))
+
 		return nil
 	}
 
-	showError("Failed to update source!")
-	body, _ := io.ReadAll(response.Body)
-	showError("Error >", string(body))
+	showSuccess("Successfully updated the source of " + name)
+	return nil
+}
 
+func generateCommand(ctx context.Context, cmd *cli.Command) error {
+	name := cmd.StringArg("name")
+	if name == "" {
+		showError("`name` argument is required!")
+		return nil
+	}
+
+	// authentication token
+	authToken := getAuthToken()
+	if authToken == "" {
+		showError("Missing authentication")
+		return nil
+	}
+
+	// spinner
+	spinnerContext, stopSpinner := context.WithCancel(ctx)
+	spinner := spinner.New().Title("Generating loader for \"" + name + "\"")
+	go func() {
+		spinner.Context(spinnerContext).Style(CliTheme.Group.Title).Run()
+	}()
+	defer stopSpinner()
+
+	// preparing request
+	req, err := http.NewRequest("POST", ApiURL+"generate", nil)
+	if err != nil {
+		panic("failed to create request")
+	}
+
+	req.Header.Set("script", name)
+	req.Header.Set("authentication", strings.TrimSpace(authToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	// executing request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		showError("Failed to generate loader!")
+		showError(err.Error())
+		return nil
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		showError("Failed to generate loader!")
+		body, _ := io.ReadAll(response.Body)
+		showError("Error >", string(body))
+
+		return nil
+	}
+
+	// parsing
+	var parsed map[string]any
+
+	err = json.NewDecoder(response.Body).Decode(&parsed)
+	if err != nil {
+		showError("failed to parse body")
+		showError(err.Error())
+		return nil
+	}
+
+	source, ok := parsed["source"].(map[string]any)
+	if !ok {
+		showError("response.source invalid")
+		return nil
+	}
+
+	raw, ok := source["raw"].(string)
+	if !ok {
+		showError("response.source.raw invalid")
+		return nil
+	}
+
+	showSuccess("Successfully generated loader for \"" + name + "\"")
+	fmt.Println(raw)
 	return nil
 }
 
@@ -426,6 +505,18 @@ func main() {
 				},
 
 				Action: publishCommand,
+			},
+			{
+				Name:        "generate",
+				Aliases:     []string{"g", "get"},
+				Description: "Generates loader to run target paste",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "name",
+						UsageText: "The paste name",
+					}},
+
+				Action: generateCommand,
 			},
 		},
 	}
